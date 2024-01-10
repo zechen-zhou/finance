@@ -1,0 +1,2 @@
+# This file will tell Heroku to look in a file called app.py for a variable called app and serve it with Gunicorn, a production-quality web server. (Flask’s built-in web server is “good enough for testing but probably not what you want to use in production.”)
+web: gunicorn app:app
