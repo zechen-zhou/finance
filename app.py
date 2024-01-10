@@ -41,14 +41,27 @@ def after_request(response):
 def index():
     """Show portfolio of stocks"""
 
-    # Query database for which stocks the user owns, the numbers of shares owned
-    rows = db.execute("SELECT stock_symbol, SUM(shares) AS total_shares FROM transactions WHERE id = ? GROUP BY stock_symbol", int(session["user_id"]))
-
     # Create an empty list
     my_list = []
 
     # The user’s current cash balance along with a grand total (i.e., stocks’ total value plus cash).
     total_value = 0
+
+    cash_value = 0
+
+    # Query database for which stocks the user owns, the numbers of shares owned
+    rows = db.execute("SELECT stock_symbol, SUM(shares) AS total_shares FROM transactions WHERE user_id = ? GROUP BY stock_symbol", int(session["user_id"]))
+    
+    # If the user hasn't make any transactions
+    if len(rows) == 0:
+        # Query database for cash
+        rows = db.execute("SELECT * FROM users WHERE id = ?", int(session["user_id"]))
+
+        if len(rows) != 0:
+            cash_value = float(rows[0]["cash"])
+        
+        # total is the same as the cash owned by the person
+        return render_template("index.html", values=my_list, cash=usd(cash_value), total=usd(cash_value))
 
     for i in range(len(rows)):
         symbol = rows[i]["stock_symbol"]
@@ -139,7 +152,7 @@ def buy():
                 current_datetime = datetime.now()
 
                 # INSERT the new transaction into transactions
-                db.execute("INSERT INTO transactions VALUES (?)", (session["user_id"], "buy", value["symbol"], shares, unit_price, total_price, current_datetime.year, current_datetime.month, current_datetime.day, current_datetime.hour, current_datetime.minute, current_datetime.second))
+                db.execute("INSERT INTO transactions (user_id, activity, stock_symbol, shares, price, total_price, year, month, day, hour, minute, second) VALUES (?)", (session["user_id"], "buy", value["symbol"], shares, unit_price, total_price, current_datetime.year, current_datetime.month, current_datetime.day, current_datetime.hour, current_datetime.minute, current_datetime.second))
 
                 # UPDATE the cash value in users
                 update_query = f"UPDATE users SET cash = '{cash_left}' WHERE id = {session['user_id']}"
@@ -158,7 +171,7 @@ def history():
     """Show history of transactions"""
 
     # Query database for history of transactions
-    rows = db.execute("SELECT stock_symbol, shares, price, year, month, day, hour, minute, second FROM transactions WHERE id = ?", int(session["user_id"]))
+    rows = db.execute("SELECT stock_symbol, shares, price, year, month, day, hour, minute, second FROM transactions WHERE user_id = ?", int(session["user_id"]))
 
     # Create an empty list
     my_list = []
@@ -351,11 +364,14 @@ def sell():
             # Query database for cash
             rows = db.execute("SELECT * FROM users WHERE id = ?", int(session["user_id"]))
 
-            cash = rows[0]["cash"]
+            if len(rows) != 0:
+                cash = rows[0]["cash"]
 
             # Query database for shares
             rows = db.execute("SELECT SUM(shares) AS total_count FROM transactions WHERE stock_symbol = ?", value["symbol"])
-            total_count = int(rows[0]["total_count"])
+            
+            if len(rows) != 0:
+                total_count = int(rows[0]["total_count"])
 
             if total_count < shares:
                 return apology("too many shares", 400)
@@ -370,7 +386,7 @@ def sell():
                 shares = - shares
 
                 # INSERT the new transaction into transactions
-                db.execute("INSERT INTO transactions VALUES (?)", (session["user_id"], "sell", value["symbol"], shares, unit_price, total_price, current_datetime.year, current_datetime.month, current_datetime.day, current_datetime.hour, current_datetime.minute, current_datetime.second))
+                db.execute("INSERT INTO transactions (user_id, activity, stock_symbol, shares, price, total_price, year, month, day, hour, minute, second) VALUES (?)", (session["user_id"], "sell", value["symbol"], shares, unit_price, total_price, current_datetime.year, current_datetime.month, current_datetime.day, current_datetime.hour, current_datetime.minute, current_datetime.second))
 
                 # UPDATE the cash value in users
                 update_query = f"UPDATE users SET cash = '{cash_left}' WHERE id = {session['user_id']}"
@@ -382,7 +398,7 @@ def sell():
     # User reached route via GET (as by clicking a link or via redirect)
     else:
         # Query database for symbol which has shares greater than 0
-        rows = db.execute("SELECT stock_symbol AS symbol, SUM(shares) AS total_shares FROM transactions WHERE id= ? GROUP BY symbol HAVING total_shares > 0", int(session["user_id"]))
+        rows = db.execute("SELECT stock_symbol AS symbol, SUM(shares) FROM transactions WHERE user_id= ? GROUP BY symbol HAVING SUM(shares) > 0", int(session["user_id"]))
 
         # Create an empty list
         my_list = []
