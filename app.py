@@ -67,30 +67,32 @@ def index():
         symbol = rows[i]["stock_symbol"]
         shares = int(rows[i]["total_shares"])
 
-        # Find the current price of the stock
-        value = lookup(symbol)
-        unit_price = float(value["price"])
-        unit_price_formatted = usd(unit_price)
+        # List information when the number of shares is not zero
+        if shares != 0:
+            # Find the current price of the stock
+            value = lookup(symbol)
+            unit_price = float(value["price"])
+            unit_price_formatted = usd(unit_price)
 
-        # Calculate the total price and round to two decimal places
-        total_price = round(unit_price * shares, 2)
+            # Calculate the total price and round to two decimal places
+            total_price = round(unit_price * shares, 2)
 
-        total_price_formatted = usd(total_price)
+            total_price_formatted = usd(total_price)
 
-        # Add the total_price to total_value
-        total_value += total_price
+            # Add the total_price to total_value
+            total_value += total_price
 
-        # Create an empty dictionary
-        my_dict = {}
+            # Create an empty dictionary
+            my_dict = {}
 
-        # Add values to the dictionary
-        my_dict['symbol'] = symbol
-        my_dict['shares'] = shares
-        my_dict['price'] = unit_price_formatted
-        my_dict['total_price'] = total_price_formatted
+            # Add values to the dictionary
+            my_dict['symbol'] = symbol
+            my_dict['shares'] = shares
+            my_dict['price'] = unit_price_formatted
+            my_dict['total_price'] = total_price_formatted
 
-        # Add the dictionary to the list
-        my_list.append(my_dict)
+            # Add the dictionary to the list
+            my_list.append(my_dict)
 
     # Query database for cash
     rows = db.execute("SELECT * FROM users WHERE id = ?", int(session["user_id"]))
