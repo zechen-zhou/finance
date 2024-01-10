@@ -1,0 +1,24 @@
+{% extends "layout.html" %}
+
+{% block title %}
+    Register
+{% endblock %}
+
+{% block main %}
+    <form action="/register" method="post">
+        <div class="mb-3">
+            <input autocomplete="off" autofocus class="form-control mx-auto w-auto" id="username" name="username" placeholder="Username" type="text">
+        </div>
+        <div class="mb-3">
+            <input class="form-control mx-auto w-auto" id="password" name="password" placeholder="Password" type="password">
+        </div>
+
+        <!-- id="password": This sets the id attribute of the input element to "password". The id attribute is used to uniquely identify the element within the HTML document. It can be useful for JavaScript and CSS to target this specific element. -->
+        <!-- name="password": This sets the name attribute of the input element to "password". When the form is submitted, the data entered into this input will be sent to the server with the name "password". (i.e. in app.py: request.form.get("password") ) -->
+        <!-- placeholder="Password": This provides a hint to the user about what kind of information is expected in the input field. In this case, it suggests that the user should enter their password. -->
+        <div class="mb-3">
+            <input class="form-control mx-auto w-auto" id="confirmation" name="confirmation" placeholder="Password (again)" type="password">
+        </div>
+        <button class="btn btn-primary" type="submit">Register</button>
+    </form>
+{% endblock %}
